@@ -78,8 +78,8 @@ label_path = "./models/voc-model-labels.txt"
 net_type = args.net_type
 
 #cap = cv2.VideoCapture(args.video_path)  # capture from video
-#cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=0), cv2.CAP_GSTREAMER) # capture from camera
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=0), cv2.CAP_GSTREAMER) # capture from camera
+#cap = cv2.VideoCapture(1)
 
 
 class_names = [name.strip() for name in open(label_path).readlines()]

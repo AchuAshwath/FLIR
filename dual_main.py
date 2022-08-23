@@ -18,9 +18,24 @@ def pixel_to_temperature(pixel):
     pixel_max = 255
     pixel_min = 0
     temp_range = temp_max-temp_min
-    temp = (((pixel-pixel_min)*temp_range)/(pixel_max-pixel_min))+temp_min + 4.3
+    temp = (((pixel-pixel_min)*temp_range)/(pixel_max-pixel_min))+temp_min + 4
     return temp
-
+def xdynamic_multiplier(pixel):
+    mul_min = -1
+    mul_max = 1
+    pixel_max = 640
+    pixel_min = 0
+    pixel_range = mul_max-mul_min
+    mul = (((pixel-pixel_min)*pixel_range)/(pixel_max-pixel_min))+mul_min 
+    return mul
+def ydynamic_multiplier(pixel):
+    mul_min = -1
+    mul_max = 1
+    pixel_max = 480
+    pixel_min = 0
+    pixel_range = mul_max-mul_min
+    mul = (((pixel-pixel_min)*pixel_range)/(pixel_max-pixel_min))+mul_min 
+    return mul
 def gstreamer_pipeline(
     sensor_id=0,
     capture_width=3264,
@@ -126,7 +141,7 @@ while True:
     for (x1,y1,x2,y2) in faces:
         if len(faces)>1:
             count+=1
-        roi = output[int(y1):int(y2), int(x1):int(x2)]
+        roi = output[ int(int(y1)+40+30*ydynamic_multiplier(int(y1))):int(int(y2)+70+60*xdynamic_multiplier(int(y2))), int(int(x1)+40+40*xdynamic_multiplier(int(x1))):int(int(x2)+70+70*xdynamic_multiplier(int(x2)))]
         try:
             roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
         except Exception as e:
@@ -153,20 +168,23 @@ while True:
         # Colors for rectangles and textmin_area
         temperature = round(mean, 2)
         color = (0, 255, 0) if temperature < 100 else (0, 0, 255)
-        
-
+        d_x1 = int(int(x1)+40+40*xdynamic_multiplier(int(x1)))
+        d_y1 = int(int(y1)+40+30*ydynamic_multiplier(int(y1)))
+        d_x2 = int(int(x2)+70+70*xdynamic_multiplier(int(x2))) 
+        d_y2 = int(int(y2)+70+60*xdynamic_multiplier(int(y2)))
         # Draw rectangles for visualisation
-        output = cv2.rectangle(output, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
+        #output = cv2.rectangle(output, (int(int(x1)+40+40*xdynamic_multiplier(int(x1))), int(int(y1)+40+30*ydynamic_multiplier(int(y1)))), (int(int(x2)+70+70*xdynamic_multiplier(int(x2))), int(int(y2)+70+60*xdynamic_multiplier(int(y2)))), color, 2)
+        output = cv2.rectangle(output, (d_x1,d_y1),(d_x2,d_y2), color, 2)
 
-        cv2.putText(output, "{} F".format(temperature), (int(x1), int(y1)-5),
+        cv2.putText(output, "{} F".format(temperature), (d_x1, d_y1-5),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2, cv2.LINE_AA)  
         if temperature > 100:
-            try:
+            try:	
                 os.mkdir('persons/person'+str(count))
             except FileExistsError:
                 pass
             while(face is True):
-                face = orig_image[int(y1)+2:int(y2)-1,int(x1)+2:int(x2)-1]
+                face = orig_image[int(y1):int(y2),int(x1):int(x2)]
                 cv2.imwrite('persons/person'+str(count)+'/person'+str(count)+'_face'+str(i)+'.jpg', face)
                 print("image captured")
                 i+=1
